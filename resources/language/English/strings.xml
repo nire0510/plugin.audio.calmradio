@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+    <!-- Plugin name -->
+    <string id="30000">Calm Radio</string>
+
+    <!-- Settings -->
+    <string id="32010">Account Details</string>
+    <string id="32011">Username</string>
+    <string id="32012">Password</string>
+    <string id="32020">Sound Quality</string>
+    <string id="32021">Fair Sound Quality</string>
+    <string id="32022">Good Sound Quality - 64 kb/s</string>
+    <string id="32023">Better Sound Quality - 128 kb/s</string>
+    <string id="32024">Best Sound Quality - 192 kb/s</string>
+
+    <!-- Menu -->
+    <string id="32100">Channels</string>
+    <string id="32101">Acoustic, Classical, World, Relaxation and Jazz music channels</string>
+    <string id="32102">Atmospheres</string>
+    <string id="32103">Music specially designed for sleep, concentration and for ringing-in-the-ear sufferers</string>
+    <string id="32104">Acoustic</string>
+    <string id="32105">Relaxation</string>
+    <string id="32106">Classical</string>
+    <string id="32107">Composers</string>
+    <string id="32108">World</string>
+    <string id="32109">Jazz</string>
+    <string id="32110">Latin</string>
+    <string id="32111">Country</string>
+    <string id="32112">Pop Rock</string>
+    <string id="32113">Water</string>
+    <string id="32114">Creatures</string>
+    <string id="32115">White Noise</string>
+    <string id="32116">Nature</string>
+    <string id="32117">Space</string>
+</strings>

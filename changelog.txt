@@ -1,0 +1,6 @@
+v0.0.5
+- Links update
+- Addon settings
+
+v0.0.2
+- Initial version
