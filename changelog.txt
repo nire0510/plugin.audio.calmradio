@@ -1,3 +1,8 @@
+v0.0.9
+- Calm Radio authentication
+- Integration with Calm Radio API
+- User favorites channel
+
 v0.0.5
 - Links update
 - Addon settings
