@@ -20,6 +20,7 @@
     <string id="32103">Music specially designed for sleep, concentration and for ringing-in-the-ear sufferers</string>
     <string id="32104">My Channels</string>
     <string id="32105">Instant access to your favorites channels</string>
+    <string id="32110">This option is for members only</string>
 
     <!-- Notifications -->
     <string id="32200">Members Only Channel</string>
@@ -38,4 +39,5 @@
     <string id="32303">Channel removed successfully from your favorite channels list</string>
     <string id="32304">Channel could not be added to your favorite channels list. Try again later</string>
     <string id="32305">Channel could not be removed from your favorite channels list. Try again later</string>
+    <string id="32306">Your favorite channels list is empty</string>
 </strings>

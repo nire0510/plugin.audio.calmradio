@@ -1,11 +1,14 @@
-v0.0.9
+v0.1.2
+- Official calmradio.com Kodi add-on
+
+v0.1.1
 - Calm Radio authentication
 - Integration with Calm Radio API
 - User favorites channel
 
 v0.0.5
 - Links update
-- Addon settings
+- Add-on settings
 
 v0.0.2
 - Initial version

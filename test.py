@@ -19,8 +19,8 @@ api = API(plugin)
 # for sub_category in api.get_subcategories(1):
 #     print sub_category['name']
 
-# for channel in api.get_channels(7):
-#     print channel['id'], channel['streams']['free']
+for channel in api.get_channels(7):
+    print channel['description']
 
 # print api.add_to_favorites('username', 'password', 9)
 # print api.remove_from_favorites('username', 'password', 9)

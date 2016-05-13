@@ -11,6 +11,9 @@ class User(object):
     def __init__(self, plugin):
         self.plugin = plugin
         self.auth = plugin.get_storage('auth', TTL=24)
+        self.username = None
+        self.password = None
+        self.token = None
 
     @staticmethod
     def get_json(url):

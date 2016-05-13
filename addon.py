@@ -95,9 +95,9 @@ def show_favorites():
                 }
             } for item in favorites])
         else:
-            plugin.notify('Your favorite channels list is empty')
+            plugin.notify(plugin.get_string(32306))
     else:
-        plugin.notify('This menu is for members only')
+        plugin.notify(plugin.get_string(32110))
 
 
 @plugin.route('/category/<category_id>/subcategory/<subcategory_id>/channel/<channel_id>')
@@ -110,8 +110,6 @@ def play_channel(category_id, subcategory_id, channel_id):
                       user.username,
                       user.token,
                       user.is_authenticated())
-
-    plugin.log.info('Playing: ' + url)
 
     # is there a va;id URL for channel?
     if url:
@@ -151,7 +149,7 @@ def add_to_favorites(channel_id):
         result = api.add_to_favorites(user.username, user.token, channel_id)
         plugin.notify(plugin.get_string(32302) if result else plugin.get_string(32304))
     else:
-        plugin.notify('This option is for members only')
+        plugin.notify(plugin.get_string(32110))
 
 
 @plugin.route('/favorites/remove/<channel_id>')
@@ -168,7 +166,7 @@ def remove_from_favorites(channel_id):
         plugin.redirect(plugin.url_for('index'))
         plugin.notify(plugin.get_string(32303) if result else plugin.get_string(32305))
     else:
-        plugin.notify('This option is for members only')
+        plugin.notify(plugin.get_string(32110))
 
 
 def make_favorite_ctx(channel_id):
