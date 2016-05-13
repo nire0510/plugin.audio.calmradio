@@ -1,5 +1,6 @@
+import sys
 import urllib
-from xbmcswift2 import Plugin, xbmc, xbmcgui, actions
+from xbmcswift2 import Plugin, xbmc, xbmcgui, xbmcaddon, actions
 from config import config
 from api import API
 from user import User
@@ -125,6 +126,9 @@ def play_channel(category_id, subcategory_id, channel_id):
             'Artist_Description': channel['description'],
         })
         xbmc.Player().play(item=url, listitem=li)
+        # xbmc.executebuiltin('ActivateScreensaver')
+        # xbmc.executebuiltin('PlayMedia("special://home/addons/plugin.audio.calmradio/resources/media/video/clouds.mp4")')
+        # xbmc.executebuiltin('AlarmClock(Test, Notification("bla", "Blue"), 00:05, True, True)')
     else:
         dialog = xbmcgui.Dialog()
         ret = dialog.yesno('Members Only Channel', 'To enjoy this channel and many other VIP channels:\n'
@@ -181,3 +185,9 @@ def make_unfavorite_ctx(channel_id):
 
 if __name__ == '__main__':
     plugin.run(plugin)
+    # if not plugin.get_setting('username'):
+    if sys.argv[0] == 'plugin://plugin.audio.calmradio/' and not plugin.get_setting('username'):
+        plugin.notify(plugin.get_string(32202),
+                      plugin.get_string(30000),
+                      6000,
+                      'special://home/addons/plugin.audio.calmradio/icon.png')

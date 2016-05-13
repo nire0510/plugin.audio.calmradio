@@ -31,6 +31,7 @@
        '3. Open http://calmradio.com and purchase a subscription\n\n'
        'Would you like to open the add-on settings window?
     </string>
+    <string id="32202">To enjoy high-quality sound and members only channels, open add-on settings and fill in your account details!</string>
 
     <!-- Favorites -->
     <string id="32300">Add To My Channels</string>
