@@ -1,109 +1,172 @@
 import sys
+import routing
 import urllib
-from xbmcswift2 import Plugin, xbmc, xbmcgui, xbmcaddon, actions
 from config import config
 from api import API
 from user import User
+from xbmc import log, executebuiltin, Player
+from xbmcgui import ListItem, Dialog
+from xbmcplugin import addDirectoryItem, endOfDirectory
+from xbmcaddon import Addon
 
 
-plugin = Plugin()
-api = API(plugin)
+plugin = routing.Plugin()
+addon = Addon(config['addon']['id'])
+api = API(addon)
 
 
 @plugin.route('/')
 def index():
-    return plugin.finish([{
-        'label': item['name'],
-        'icon': item['image'],
-        'path': plugin.url_for('show_subcategories', category_id=item['id'])
-                              if item['id'] != 99 else
-                              plugin.url_for('show_favorites'),
-        'properties': {
-            'fanart_image': item['image']
-        },
-        'info': {
-            'Title': item['name'],
-            'Artist': 'Calm Radio',
-            'Artist_Description': item['description']
-        }
-    } for item in api.get_categories()])
+    """
+    Main addon page
+    :return:
+    """
+    for item in api.get_categories():
+        # list item:
+        li = ListItem(item['name'], iconImage=item['image'], thumbnailImage=item['image'])
+        li.setArt({
+            'fanart': item['image']
+        })
+        # diretory item:
+        addDirectoryItem(
+            plugin.handle,
+            plugin.url_for(show_subcategories, category_id=item['id'])
+                                  if item['id'] != 99 else
+                                  plugin.url_for(show_favorites),
+            li,
+            True
+        )
+    # end of directory:
+    endOfDirectory(plugin.handle)
 
 
 @plugin.route('/category/<category_id>')
 def show_subcategories(category_id):
-    return plugin.finish([{
-        'label': item['name'].capitalize(),
-        'icon': '{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
-        'path': plugin.url_for('show_channels', category_id=category_id, subcategory_id=item['id']),
-        'properties': {
-            'fanart_image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/subcategory-{0}.jpg'.format(item['id'])
-        },
-        'info': {
-            'Title': item['name'],
-            'Artist': plugin.get_string(30000)
-        }
-    } for item in api.get_subcategories(int(category_id))])
+    """
+    Sub-categories page
+    :param category_id:
+    :return:
+    """
+    for item in api.get_subcategories(int(category_id)):
+        # list item:
+        li = ListItem(item['name'].capitalize(),
+            iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
+            thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']))
+        li.setArt({
+            'fanart': 'special://home/addons/{0}/resources/media/fanart/subcategory-{1}.jpg'
+                .format(config['addon']['id'], item['id'])
+        })
+        # diretory item:
+        addDirectoryItem(
+            plugin.handle,
+            plugin.url_for(show_channels, category_id=category_id, subcategory_id=item['id']),
+            li,
+            True
+        )
+    # end of directory:
+    endOfDirectory(plugin.handle)
 
 
 @plugin.route('/category/<category_id>/subcategory/<subcategory_id>')
 def show_channels(category_id, subcategory_id):
-    return plugin.finish([{
-        'label': u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(), '(VIP)' if 'free' not in item['streams'] else ''),
-        'icon': '{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
-        'path': plugin.url_for('play_channel',
-                               category_id=category_id,
-                               subcategory_id=subcategory_id,
-                               channel_id=item['id']),
-        'context_menu': [
-            make_favorite_ctx(item['id'])
-        ],
-        'properties': {
-            'fanart_image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/channel-{0}.jpg'.format(item['id'])
-        },
-        'info': {
-            'Title': item['title'],
-            'Artist': plugin.get_string(30000),
-            'Artist_Description': item['description']
-        }
-    } for item in api.get_channels(int(subcategory_id))])
+    """
+    Channels page
+    :param category_id:
+    :param subcategory_id:
+    :return:
+    """
+    for item in api.get_channels(int(subcategory_id)):
+        # list item:
+        li = ListItem(u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(), '(VIP)' if 'free' not in item['streams'] else ''),
+            iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
+            thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']))
+        li.setArt({
+            'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
+                .format(config['addon']['id'], item['id'])
+        })
+        li.addContextMenuItems(
+            [(addon.getLocalizedString(32300), 'RunPlugin(plugin://{0}/favorites/add/{1})'
+              .format(config['addon']['id'], item['id']))]
+        )
+        # diretory item:
+        addDirectoryItem(
+            plugin.handle,
+            plugin.url_for(play_channel,
+                           category_id=category_id,
+                           subcategory_id=subcategory_id,
+                           channel_id=item['id']),
+            li
+        )
+    # end of directory:
+    endOfDirectory(plugin.handle)
 
 
 @plugin.route('/favorites')
 def show_favorites():
-    user = User(plugin)
+    """
+    User's favorite channels list
+    :return:
+    """
+    user = User(addon)
     is_authenticated = user.authenticate()
 
     if is_authenticated:
         favorites = api.get_favorites(user.username, user.token)
         if len(favorites) > 0:
-            return plugin.finish([{
-                'label': u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(), '(VIP)' if 'free' not in item['streams'] else ''),
-                'icon': '{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
-                'path': api.get_url(item['streams'],
-                              user.username,
-                              user.token,
-                              user.is_authenticated()),
-                'context_menu': [
-                    make_unfavorite_ctx(item['id'])
-                ],
-                'properties': {
-                    'fanart_image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/channel-{0}.jpg'.format(item['id'])
-                },
-                'info': {
-                    'Title': item['title'],
-                    'Artist': plugin.get_string(30000),
-                    'Artist_Description': item['description']
-                }
-            } for item in favorites])
+            for item in favorites:
+                path = api.get_url(item['streams'],
+                                   user.username,
+                                   user.token,
+                                   user.is_authenticated()
+                                   )
+                # list item:
+                li = ListItem(u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(), '(VIP)' if 'free' not in item['streams'] else ''),
+                              iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
+                              thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
+                              path=path
+                              )
+                li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
+                   'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
+                          .format(config['addon']['id'], item['id']) })
+                li.setInfo('music', {'Title': item['title'].replace('CALM RADIO -', '').title(), 'Artist': item['description']})
+                li.setProperty('mimetype', 'audio/mpeg')
+                li.setProperty('IsPlayable', 'true')
+                li.setInfo('music', {
+                    'Title': item['title'].replace('CALM RADIO -', '').title(),
+                    'Artist_Description': item['description'],
+                })
+                li.addContextMenuItems(
+                    [(addon.getLocalizedString(32301), 'RunPlugin(plugin://{0}/favorites/remove/{1})'
+                      .format(config['addon']['id'], item['id']))]
+                )
+                # diretory item:
+                addDirectoryItem(
+                    plugin.handle,
+                    path,
+                    li
+                )
+            # end of directory:
+            endOfDirectory(plugin.handle)
+        # favorites list is empty:
         else:
-            plugin.notify(plugin.get_string(32306))
+            executebuiltin('Notification("{0}", "{1}")'
+                           .format(addon.getLocalizedString(30000), addon.getLocalizedString(32306)))
+    # user is not authenticated:
     else:
-        plugin.notify(plugin.get_string(32110))
+        executebuiltin('Notification("{0}", "{1}")'
+                           .format(addon.getLocalizedString(30000), addon.getLocalizedString(32110)))
 
 
 @plugin.route('/category/<category_id>/subcategory/<subcategory_id>/channel/<channel_id>')
 def play_channel(category_id, subcategory_id, channel_id):
-    user = User(plugin)
+    """
+    Plays selected song
+    :param category_id:
+    :param subcategory_id:
+    :param channel_id:
+    :return:
+    """
+    user = User(addon)
     user.authenticate()
     channel = [item for item in api.get_channels(int(subcategory_id))
                if item['id'] == int(channel_id)][0]
@@ -115,9 +178,10 @@ def play_channel(category_id, subcategory_id, channel_id):
     # is there a va;id URL for channel?
     if url:
         url = urllib.quote(url, safe=':/?=@')
-        li = xbmcgui.ListItem(channel['title'], channel['description'], channel['image'])
+        li = ListItem(channel['title'], channel['description'], channel['image'])
         li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], channel['image']),
-                   'fanart': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/channel-{0}.jpg'.format(channel['id']) })
+                   'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
+                  .format(config['addon']['id'], channel['id']) })
         li.setInfo('music', {'Title': channel['title'].replace('CALM RADIO -', '').title(), 'Artist': channel['description']})
         li.setProperty('mimetype', 'audio/mpeg')
         li.setProperty('IsPlayable', 'true')
@@ -125,19 +189,13 @@ def play_channel(category_id, subcategory_id, channel_id):
             'Title': channel['title'].replace('CALM RADIO -', '').title(),
             'Artist_Description': channel['description'],
         })
-        xbmc.Player().play(item=url, listitem=li)
-        # xbmc.executebuiltin('ActivateScreensaver')
-        # xbmc.executebuiltin('PlayMedia("special://home/addons/plugin.audio.calmradio/resources/media/video/clouds.mp4")')
+        Player().play(item=url, listitem=li)
         # xbmc.executebuiltin('AlarmClock(Test, Notification("bla", "Blue"), 00:05, True, True)')
     else:
-        dialog = xbmcgui.Dialog()
-        ret = dialog.yesno('Members Only Channel', 'To enjoy this channel and many other VIP channels:\n'
-                                               '1. Open add-on settings and fill in your Calm Radio account details\n'
-                                               '2. Verify that the account details you enetered are correct.\n'
-                                               '3. Open http://calmradio.com and purchase a subscription\n\n'
-                                               'Would you like to open the add-on settings window?')
+        dialog = Dialog()
+        ret = dialog.yesno(addon.getLocalizedString(32200), addon.getLocalizedString(32201))
         if ret == 1:
-            plugin.open_settings()
+            addon.openSettings()
 
 
 @plugin.route('/favorites/add/<channel_id>')
@@ -147,13 +205,16 @@ def add_to_favorites(channel_id):
     :param channel_id: Channel ID
     :return:
     """
-    user = User(plugin)
+    user = User(addon)
     is_authenticated = user.authenticate()
     if is_authenticated:
         result = api.add_to_favorites(user.username, user.token, channel_id)
-        plugin.notify(plugin.get_string(32302) if result else plugin.get_string(32304))
+        executebuiltin('Notification("{0}", "{1}"'.format(addon.getLocalizedString(30000),
+                                                      addon.getLocalizedString(32302) if result
+                                                      else addon.getLocalizedString(32304)))
     else:
-        plugin.notify(plugin.get_string(32110))
+        executebuiltin('Notification("{0}", "{1}")'.format(addon.getLocalizedString(30000),
+                                                           addon.getLocalizedString(32110)))
 
 
 @plugin.route('/favorites/remove/<channel_id>')
@@ -163,31 +224,25 @@ def remove_from_favorites(channel_id):
     :param channel_id: Channel ID
     :return:
     """
-    user = User(plugin)
+    user = User(addon)
     is_authenticated = user.authenticate()
     if is_authenticated:
         result = api.remove_from_favorites(user.username, user.token, channel_id)
-        plugin.redirect(plugin.url_for('index'))
-        plugin.notify(plugin.get_string(32303) if result else plugin.get_string(32305))
+        executebuiltin('Container.Refresh')
+        executebuiltin('Notification("{0}", "{1}")'.format(
+            addon.getLocalizedString(30000),
+            addon.getLocalizedString(32303) if result else addon.getLocalizedString(32305)
+        ))
     else:
-        plugin.notify(plugin.get_string(32110))
-
-
-def make_favorite_ctx(channel_id):
-    return (plugin.get_string(32300),
-            actions.background(plugin.url_for('add_to_favorites', channel_id=channel_id)))
-
-
-def make_unfavorite_ctx(channel_id):
-    return (plugin.get_string(32301),
-            actions.background(plugin.url_for('remove_from_favorites', channel_id=channel_id)))
-
+        executebuiltin('Notification("{0}", "{1}")'.format(
+            addon.getLocalizedString(30000),
+            addon.getLocalizedString(32110)
+        ))
 
 if __name__ == '__main__':
-    plugin.run(plugin)
-    # if not plugin.get_setting('username'):
-    if sys.argv[0] == 'plugin://plugin.audio.calmradio/' and not plugin.get_setting('username'):
-        plugin.notify(plugin.get_string(32202),
-                      plugin.get_string(30000),
-                      6000,
-                      'special://home/addons/plugin.audio.calmradio/icon.png')
+    plugin.run()
+    if sys.argv[0] == 'plugin://{0}/'.format(config['addon']['id']) and not addon.getSetting('username'):
+        executebuiltin('Notification("{0}", "{1}", 6000, "special://home/addons/{2}/icon.png")'
+                       .format(addon.getLocalizedString(30000),
+                               addon.getLocalizedString(32202),
+                               config['addon']['id']))

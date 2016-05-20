@@ -4,8 +4,8 @@ import json
 
 
 class API(object):
-    def __init__(self, plugin):
-        self.plugin = plugin
+    def __init__(self, addon):
+        self.addon = addon
 
     @staticmethod
     def get_json(url):
@@ -26,21 +26,21 @@ class API(object):
         return [
             {
                 'id': 1,
-                'name': self.plugin.get_string(32100),
+                'name': self.addon.getLocalizedString(32100),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/0.jpg',
-                'description': self.plugin.get_string(32101)
+                'description': self.addon.getLocalizedString(32101)
             },
             {
                 'id': 3,
-                'name': self.plugin.get_string(32102),
+                'name': self.addon.getLocalizedString(32102),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/3.jpg',
-                'description': self.plugin.get_string(32103)
+                'description': self.addon.getLocalizedString(32103)
             },
             {
                 'id': 99,
-                'name': self.plugin.get_string(32104),
+                'name': self.addon.getLocalizedString(32104),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/99.jpg',
-                'description': self.plugin.get_string(32105)
+                'description': self.addon.getLocalizedString(32105)
             }
         ]
 
@@ -106,7 +106,6 @@ class API(object):
         """
         if channel_id > 0 and username and token:
             result = self.get_json(config['urls']['calm_favorites_api'].format(username, token, 'add', channel_id))
-            self.plugin.log.info(config['urls']['calm_favorites_api'].format(username, token, 'add', channel_id))
             return 'success' in result and result['success'] == True
 
         return False
@@ -133,7 +132,7 @@ class API(object):
             '1': '64',
             '2': '192',
             '3': '320'
-        }[self.plugin.get_setting('bitrate') or 0]
+        }[self.addon.getSetting('bitrate') or 0]
 
         if not is_authenticated and 'free' in streams:
             return streams['free']

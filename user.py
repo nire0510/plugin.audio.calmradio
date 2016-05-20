@@ -1,16 +1,16 @@
 from config import config
+from xbmc import log
 import requests
 import json
 import time
 
 
-LOGIN_EXPIRATION = 60 * 60 *24
+LOGIN_EXPIRATION = 60 * 60 * 24
 
 
 class User(object):
-    def __init__(self, plugin):
-        self.plugin = plugin
-        self.auth = plugin.get_storage('auth', TTL=24)
+    def __init__(self, addon):
+        self.addon = addon
         self.username = None
         self.password = None
         self.token = None
@@ -26,14 +26,14 @@ class User(object):
         Checks if user is already logged in
         :return: True if user is logged in, False otherwise
         """
-        if (self.plugin.get_setting('username') and
-                self.plugin.get_setting('password') and
-                'token' in self.auth and
-                time.time() - self.auth['timestamp'] < LOGIN_EXPIRATION):
-                    self.plugin.log.info('User is authenticated')
+        if (self.addon.getSetting('username') and
+                self.addon.getSetting('password') and
+                self.addon.getSetting('token') and
+                time.time() - float(self.addon.getSetting('timestamp')) < LOGIN_EXPIRATION):
+                    log('User is authenticated')
                     return True
 
-        self.plugin.log.info('User is not authenticated')
+        log('User is not authenticated')
         return False
 
     def check_sua(self):
@@ -42,8 +42,8 @@ class User(object):
         :return: True if user is already connected, False otherwise
         """
 
-        username = self.plugin.get_setting('username')
-        password = self.plugin.get_setting('password')
+        username = self.addon.getSetting('username')
+        password = self.addon.getSetting('password')
 
         # validate input:
         if username and password:
@@ -59,14 +59,14 @@ class User(object):
         :return: True if user is logged in, False otherwise
         """
 
-        self.username = self.plugin.get_setting('username')
-        self.password = self.plugin.get_setting('password')
+        self.username = self.addon.getSetting('username')
+        self.password = self.addon.getSetting('password')
 
         # validate input:
         if self.username and self.password:
             # check if user is already logged in
             if self.is_authenticated():
-                self.token = self.auth['token']
+                self.token = self.addon.getSetting('token')
                 return True
 
             # verify that user is not already connected:
@@ -82,10 +82,9 @@ class User(object):
                     return False
 
                 # authentication succeeded:
-                self.auth['timestamp'] = time.time()
-                self.auth['token'] = response['token']
+                self.addon.setSetting('timestamp', str(time.time()))
+                self.addon.setSetting('token', response['token'])
                 self.token = response['token']
-                self.auth.sync()
                 return True
 
         return False
@@ -95,6 +94,5 @@ class User(object):
         Logs current user out
         :return:
         """
-        del self.auth['timestamp']
-        del self.auth['token']
-        self.auth.sync()
+        self.addon.setSetting('timestamp', None)
+        self.addon.setSetting('token', None)
