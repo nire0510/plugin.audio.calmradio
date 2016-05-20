@@ -17,5 +17,6 @@
         <license>GNU GENERAL PUBLIC LICENSE Version 2, June 1991</license>
         <website>http://calmradio.com/</website>
         <email>support@calmradio.com</email>
+        <source>https://github.com/nire0510/plugin.audio.calmradio</source>
     </extension>
 </addon>
