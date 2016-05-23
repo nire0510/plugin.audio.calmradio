@@ -53,8 +53,7 @@ def show_subcategories(category_id):
             iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
             thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']))
         li.setArt({
-            'fanart': 'special://home/addons/{0}/resources/media/fanart/subcategory-{1}.jpg'
-                .format(config['addon']['id'], item['id'])
+            'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], item['image'])
         })
         # diretory item:
         addDirectoryItem(
@@ -81,8 +80,7 @@ def show_channels(category_id, subcategory_id):
             iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
             thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']))
         li.setArt({
-            'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
-                .format(config['addon']['id'], item['id'])
+            'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], item['image'])
         })
         li.addContextMenuItems(
             [(addon.getLocalizedString(32300), 'RunPlugin(plugin://{0}/favorites/add/{1})'
@@ -126,8 +124,7 @@ def show_favorites():
                               path=path
                               )
                 li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
-                   'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
-                          .format(config['addon']['id'], item['id']) })
+                   'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], item['image']) })
                 li.setInfo('music', {'Title': item['title'].replace('CALM RADIO -', '').title(), 'Artist': item['description']})
                 li.setProperty('mimetype', 'audio/mpeg')
                 li.setProperty('IsPlayable', 'true')
@@ -175,13 +172,12 @@ def play_channel(category_id, subcategory_id, channel_id):
                       user.token,
                       user.is_authenticated())
 
-    # is there a va;id URL for channel?
+    # is there a valid URL for channel?
     if url:
         url = urllib.quote(url, safe=':/?=@')
         li = ListItem(channel['title'], channel['description'], channel['image'])
         li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], channel['image']),
-                   'fanart': 'special://home/addons/{0}/resources/media/fanart/channel-{1}.jpg'
-                  .format(config['addon']['id'], channel['id']) })
+                   'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']) })
         li.setInfo('music', {'Title': channel['title'].replace('CALM RADIO -', '').title(), 'Artist': channel['description']})
         li.setProperty('mimetype', 'audio/mpeg')
         li.setProperty('IsPlayable', 'true')
