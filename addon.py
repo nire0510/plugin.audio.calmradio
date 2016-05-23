@@ -5,9 +5,10 @@ from config import config
 from api import API
 from user import User
 from xbmc import log, executebuiltin, Player
-from xbmcgui import ListItem, Dialog
+from xbmcgui import ListItem, Dialog, WindowDialog, ControlLabel
 from xbmcplugin import addDirectoryItem, endOfDirectory
 from xbmcaddon import Addon
+from nowplaying import NowPlaying
 
 
 plugin = routing.Plugin()
@@ -163,35 +164,38 @@ def play_channel(category_id, subcategory_id, channel_id):
     :param channel_id:
     :return:
     """
-    user = User(addon)
-    user.authenticate()
-    channel = [item for item in api.get_channels(int(subcategory_id))
-               if item['id'] == int(channel_id)][0]
-    url = api.get_url(channel['streams'],
-                      user.username,
-                      user.token,
-                      user.is_authenticated())
-
-    # is there a valid URL for channel?
-    if url:
-        url = urllib.quote(url, safe=':/?=@')
-        li = ListItem(channel['title'], channel['description'], channel['image'])
-        li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], channel['image']),
-                   'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']) })
-        li.setInfo('music', {'Title': channel['title'].replace('CALM RADIO -', '').title(), 'Artist': channel['description']})
-        li.setProperty('mimetype', 'audio/mpeg')
-        li.setProperty('IsPlayable', 'true')
-        li.setInfo('music', {
-            'Title': channel['title'].replace('CALM RADIO -', '').title(),
-            'Artist_Description': channel['description'],
-        })
-        Player().play(item=url, listitem=li)
-        # xbmc.executebuiltin('AlarmClock(Test, Notification("bla", "Blue"), 00:05, True, True)')
-    else:
-        dialog = Dialog()
-        ret = dialog.yesno(addon.getLocalizedString(32200), addon.getLocalizedString(32201))
-        if ret == 1:
-            addon.openSettings()
+    # user = User(addon)
+    # user.authenticate()
+    # channel = [item for item in api.get_channels(int(subcategory_id))
+    #            if item['id'] == int(channel_id)][0]
+    # url = api.get_url(channel['streams'],
+    #                   user.username,
+    #                   user.token,
+    #                   user.is_authenticated())
+    #
+    # # is there a valid URL for channel?
+    # if url:
+    #     url = urllib.quote(url, safe=':/?=@')
+    #     li = ListItem(channel['title'], channel['description'], channel['image'])
+    #     li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], channel['image']),
+    #                'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']) })
+    #     li.setInfo('music', {'Title': channel['title'].replace('CALM RADIO -', '').title(), 'Artist': channel['description']})
+    #     li.setProperty('mimetype', 'audio/mpeg')
+    #     li.setProperty('IsPlayable', 'true')
+    #     li.setInfo('music', {
+    #         'Title': channel['title'].replace('CALM RADIO -', '').title(),
+    #         'Artist_Description': channel['description'],
+    #     })
+    #     Player().play(item=url, listitem=li)
+    #     # xbmc.executebuiltin('AlarmClock(Test, Notification("bla", "Blue"), 00:05, True, True)')
+    # else:
+    #     dialog = Dialog()
+    #     ret = dialog.yesno(addon.getLocalizedString(32200), addon.getLocalizedString(32201))
+    #     if ret == 1:
+    #         addon.openSettings()
+    window = NowPlaying()
+    window.doModal()
+    del window
 
 
 @plugin.route('/favorites/add/<channel_id>')
