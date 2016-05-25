@@ -2,7 +2,7 @@ import xbmc, xbmcgui
 
 ACTION_PREVIOUS_MENU = 10
 
-class NowPlaying(xbmcgui.WindowDialog):
+class NowPlayingWindow(xbmcgui.WindowDialog):
     def __init__(self):
         background = xbmcgui.ControlImage(40, 40, 270, 154, 'ContentPanel.png')
         self.addControl(background)

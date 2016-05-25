@@ -4,11 +4,13 @@ import urllib
 from config import config
 from api import API
 from user import User
+import xbmc, xbmcgui
 from xbmc import log, executebuiltin, Player
-from xbmcgui import ListItem, Dialog, WindowDialog, ControlLabel
+from xbmcgui import ListItem, Dialog, WindowDialog, ControlLabel, getCurrentWindowId
 from xbmcplugin import addDirectoryItem, endOfDirectory
 from xbmcaddon import Addon
-from nowplaying import NowPlaying
+from nowplaying import NowPlayingWindow
+from welcome import WelcomeWindow
 
 
 plugin = routing.Plugin()
@@ -22,23 +24,28 @@ def index():
     Main addon page
     :return:
     """
-    for item in api.get_categories():
-        # list item:
-        li = ListItem(item['name'], iconImage=item['image'], thumbnailImage=item['image'])
-        li.setArt({
-            'fanart': item['image']
-        })
-        # diretory item:
-        addDirectoryItem(
-            plugin.handle,
-            plugin.url_for(show_subcategories, category_id=item['id'])
-                                  if item['id'] != 99 else
-                                  plugin.url_for(show_favorites),
-            li,
-            True
-        )
-    # end of directory:
-    endOfDirectory(plugin.handle)
+    # for item in api.get_categories():
+    #     # list item:
+    #     li = ListItem(item['name'], iconImage=item['image'], thumbnailImage=item['image'])
+    #     li.setArt({
+    #         'fanart': item['image']
+    #     })
+    #     # diretory item:
+    #     addDirectoryItem(
+    #         plugin.handle,
+    #         plugin.url_for(show_subcategories, category_id=item['id'])
+    #                               if item['id'] != 99 else
+    #                               plugin.url_for(show_favorites),
+    #         li,
+    #         True
+    #     )
+    # # end of directory:
+    # endOfDirectory(plugin.handle)
+    welcome = WelcomeWindow()
+    welcome.doModal()
+    category = int(welcome.getProperty('Category'))
+    del welcome
+    show_subcategories(category) if category != 99 else show_favorites()
 
 
 @plugin.route('/category/<category_id>')
