@@ -1,4 +1,5 @@
 from config import config
+from cache import cache
 import requests
 import json
 
@@ -8,6 +9,7 @@ class API(object):
         self.addon = addon
 
     @staticmethod
+    @cache
     def get_json(url):
         """
         Gets JSON file
@@ -95,6 +97,7 @@ class API(object):
                 for category in self.get_json(config['urls']['calm_channels_api']):
                     for channel in category['channels']:
                         if str(channel['id']) in favorites:
+                            channel['sub_category'] = category['category']
                             results.append(channel)
 
         return results
@@ -121,7 +124,8 @@ class API(object):
 
         return False
 
-    def get_url(self, streams, username, token, is_authenticated):
+
+    def get_streaming_url(self, streams, username, token, is_authenticated):
         """
         Returns the stream URL based on chosen quality
         :param streams: Chosen quality
