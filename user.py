@@ -5,7 +5,6 @@ import requests
 import json
 import time
 
-
 ADDON = Addon()
 LOGIN_EXPIRATION = 60 * 60 * 24
 
@@ -30,9 +29,9 @@ class User(object):
         if (ADDON.getSetting('username') and
                 ADDON.getSetting('password') and
                 ADDON.getSetting('token') and
-                time.time() - float(ADDON.getSetting('timestamp')) < LOGIN_EXPIRATION):
-                    log('User is authenticated')
-                    return True
+                        time.time() - float(ADDON.getSetting('timestamp')) < LOGIN_EXPIRATION):
+            log('User is authenticated')
+            return True
 
         log('User is not authenticated')
         return False
@@ -50,8 +49,8 @@ class User(object):
         if username and password:
             # check single user authentication:
             return self.get_json(config['urls']['calm_sua_api'].format(
-                username,
-                password
+                    username,
+                    password
             ))['detected']
 
     def authenticate(self):
@@ -74,8 +73,8 @@ class User(object):
             if not self.check_sua():
                 # authenticate:
                 response = self.get_json(config['urls']['calm_auth_api'].format(
-                    self.username,
-                    self.password
+                        self.username,
+                        self.password
                 ))
 
                 # authentication failed:

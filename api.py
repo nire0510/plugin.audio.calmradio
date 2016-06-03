@@ -24,32 +24,6 @@ class API(object):
         if r.status_code == 200:
             return json.loads(r.text)
 
-    def get_categories(self):
-        """
-        Returns calm radio top level categories
-        :return:
-        """
-        return [
-            {
-                'id': 1,
-                'name': ADDON.getLocalizedString(32100),
-                'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/0.jpg',
-                'description': ADDON.getLocalizedString(32101)
-            },
-            {
-                'id': 3,
-                'name': ADDON.getLocalizedString(32102),
-                'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/3.jpg',
-                'description': ADDON.getLocalizedString(32103)
-            },
-            {
-                'id': 99,
-                'name': ADDON.getLocalizedString(32104),
-                'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/99.jpg',
-                'description': ADDON.getLocalizedString(32105)
-            }
-        ]
-
     def get_all_subcategories(self):
         """
         Returns a list of all sub categories
@@ -91,6 +65,8 @@ class API(object):
     def get_favorites(self, username, token):
         """
         Returns users favorites channels
+        :param username: Username
+        :param token: Access token
         :return:
         """
         results = []
@@ -109,6 +85,9 @@ class API(object):
     def add_to_favorites(self, username, token, channel_id):
         """
         Returns users favorites channels
+        :param username: Username
+        :param token: Access token
+        :param channel_id: Channel ID
         :return:
         """
         if channel_id > 0 and username and token:
@@ -120,6 +99,9 @@ class API(object):
     def remove_from_favorites(self, username, token, channel_id):
         """
         Returns users favorites channels
+        :param username: Username
+        :param token: Access token
+        :param channel_id: Channel ID
         :return:
         """
         if channel_id > 0 and username and token:
@@ -128,11 +110,13 @@ class API(object):
 
         return False
 
-
     def get_streaming_url(self, streams, username, token, is_authenticated):
         """
         Returns the stream URL based on chosen quality
-        :param streams: Chosen quality
+        :param streams: List of available channel streams
+        :param username: Username
+        :param token: Access token
+        :param is_authenticated: Indicates whether user is authenticated
         :return:
         """
         bitrate = {
