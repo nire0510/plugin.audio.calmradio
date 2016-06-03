@@ -89,9 +89,9 @@ class ArtworkWindow(xbmcgui.WindowDialog):
             dimentions['button']['width'],
             dimentions['button']['width'],
             'X',
-            focusTexture='0xFFFFFFFF',
-            noFocusTexture='0xFFFFFFFF',
-            alignment=2,
+            focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.4.png',
+            noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.2.png',
+            alignment=6,
             textColor='0xAAFFFFFF',
             focusedColor='0xFFFFFFFF'
         )
@@ -170,6 +170,9 @@ class ArtworkWindow(xbmcgui.WindowDialog):
         if action == ACTION_PREVIOUS_MENU or action == ACTION_PARENT_DIR:
             self.setProperty('Closed', 'True')
             self.close()
+        else:
+            # set focus on close button:
+            self.setFocus(self.btn_close)
 
     def onControl(self, control):
         if control == self.btn_close:

@@ -5,7 +5,7 @@ from time import time
 from config import config
 from api import API
 from user import User
-from xbmc import executebuiltin, Player, sleep, translatePath
+from xbmc import executebuiltin, Player, sleep, translatePath, log
 from xbmcgui import ListItem, Dialog
 from xbmcplugin import addDirectoryItem, endOfDirectory, setContent
 from xbmcaddon import Addon
@@ -203,6 +203,8 @@ def play_channel(category_id, subcategory_id, channel_id):
             'Title': channel['title'].replace('CALM RADIO -', '').title()
         })
         Player().play(item=url, listitem=li)
+
+        log('Playing url: {0}'.format(url))
 
         # update now playing fanrt, channel name & description:
         artwork.overlay.setImage('{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']))

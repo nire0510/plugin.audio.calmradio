@@ -2,6 +2,7 @@ import xbmc, xbmcgui
 from config import config
 from xbmcaddon import Addon
 
+ACTION_PARENT_DIR = 9
 ACTION_PREVIOUS_MENU = 10
 ADDON = Addon()
 ADDON_ID = ADDON.getAddonInfo("id")
@@ -179,12 +180,18 @@ class IntroWindow(xbmcgui.WindowDialog):
                                     if idx - dimentions['thumbnail']['per_row'] >= 0 else button,
                                  down=self.controls['buttons'][idx + dimentions['thumbnail']['per_row']]
                                     if idx + dimentions['thumbnail']['per_row'] < len(self.controls['buttons']) else button)
+        self.controls['buttons'][0].controlLeft(self.btn_account)
+        self.controls['buttons'][len(self.controls['buttons']) - 1].controlRight(self.controls['buttons'][0])
 
+        # side bar navigation:
+        self.btn_account.setNavigation(self.controls['buttons'][0], self.btn_my_channels, self.controls['buttons'][0], self.controls['buttons'][0])
+        self.btn_my_channels.setNavigation(self.btn_account, self.btn_exit, self.controls['buttons'][0], self.controls['buttons'][0])
+        self.btn_exit.setNavigation(self.btn_my_channels, self.controls['buttons'][0], self.controls['buttons'][0], self.controls['buttons'][0])
         # focus on first button:
         self.setFocus(self.controls['buttons'][0])
 
     def onAction(self, action):
-        if action == ACTION_PREVIOUS_MENU:
+        if action == ACTION_PREVIOUS_MENU or action == ACTION_PARENT_DIR:
             self.close()
 
     def onControl(self, control):
