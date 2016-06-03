@@ -1,12 +1,16 @@
+from xbmcaddon import Addon
 from config import config
 from cache import cache
 import requests
 import json
 
 
+ADDON = Addon()
+
+
 class API(object):
-    def __init__(self, addon):
-        self.addon = addon
+    def __init__(self):
+        pass
 
     @staticmethod
     @cache
@@ -28,21 +32,21 @@ class API(object):
         return [
             {
                 'id': 1,
-                'name': self.addon.getLocalizedString(32100),
+                'name': ADDON.getLocalizedString(32100),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/0.jpg',
-                'description': self.addon.getLocalizedString(32101)
+                'description': ADDON.getLocalizedString(32101)
             },
             {
                 'id': 3,
-                'name': self.addon.getLocalizedString(32102),
+                'name': ADDON.getLocalizedString(32102),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/3.jpg',
-                'description': self.addon.getLocalizedString(32103)
+                'description': ADDON.getLocalizedString(32103)
             },
             {
                 'id': 99,
-                'name': self.addon.getLocalizedString(32104),
+                'name': ADDON.getLocalizedString(32104),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/99.jpg',
-                'description': self.addon.getLocalizedString(32105)
+                'description': ADDON.getLocalizedString(32105)
             }
         ]
 
@@ -136,7 +140,7 @@ class API(object):
             '1': '64',
             '2': '192',
             '3': '320'
-        }[self.addon.getSetting('bitrate') or 0]
+        }[ADDON.getSetting('bitrate') or 0]
 
         if not is_authenticated and 'free' in streams:
             return streams['free']

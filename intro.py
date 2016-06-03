@@ -1,8 +1,11 @@
-import xbmc, xbmcgui, xbmcaddon
-from xbmc import getLocalizedString
+import xbmc, xbmcgui
 from config import config
+from xbmcaddon import Addon
 
 ACTION_PREVIOUS_MENU = 10
+ADDON = Addon()
+ADDON_ID = ADDON.getAddonInfo("id")
+ADDON_NAME = ADDON.getAddonInfo("name")
 
 class IntroWindow(xbmcgui.WindowDialog):
     def __init__(self, api):
@@ -49,7 +52,7 @@ class IntroWindow(xbmcgui.WindowDialog):
         sub_categories += [
             {
                 'id': 3,
-                'name': getLocalizedString(32102),
+                'name': ADDON.getLocalizedString(32102),
                 'image': 'special://home/addons/plugin.audio.calmradio/resources/media/fanart/3.jpg'
             }
         ]
@@ -84,13 +87,13 @@ class IntroWindow(xbmcgui.WindowDialog):
                                             dimentions['window']['y1'] + dimentions['logo']['height'] + 40,
                                             dimentions['sidebar']['width'],
                                             dimentions['description']['height'],
-                                            getLocalizedString(32355),
+                                            ADDON.getLocalizedString(32355),
                                             textColor='aaffffff', alignment=2, font='font12')
         description2 = xbmcgui.ControlLabel(dimentions['window']['x1'],
                                             dimentions['window']['y1'] + dimentions['logo']['height'] + 80,
                                             dimentions['sidebar']['width'],
                                             dimentions['description']['height'],
-                                            getLocalizedString(32356),
+                                            ADDON.getLocalizedString(32356).encode('utf-8'),
                                             textColor='ffffffff', alignment=2)
 
         # user account button:
@@ -99,7 +102,7 @@ class IntroWindow(xbmcgui.WindowDialog):
                                                 dimentions['exit']['height']) * 3,
                                                 dimentions['sidebar']['width'] - dimentions['spacing']['normal'] * 2,
                                                 dimentions['exit']['height'],
-                                                getLocalizedString(32350),
+                                                ADDON.getLocalizedString(32350),
                                                 alignment=2,
                                                 noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.2.png',
                                                 focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.4.png')
@@ -110,7 +113,7 @@ class IntroWindow(xbmcgui.WindowDialog):
                                                 dimentions['exit']['height']) * 2,
                                                 dimentions['sidebar']['width'] - dimentions['spacing']['normal'] * 2,
                                                 dimentions['exit']['height'],
-                                                getLocalizedString(32351),
+                                                ADDON.getLocalizedString(32351),
                                                 alignment=2,
                                                 noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.2.png',
                                                 focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.4.png')
@@ -121,7 +124,7 @@ class IntroWindow(xbmcgui.WindowDialog):
                                                 dimentions['exit']['height'],
                                               dimentions['sidebar']['width'] - dimentions['spacing']['normal'] * 2,
                                               dimentions['exit']['height'],
-                                              getLocalizedString(32352),
+                                              ADDON.getLocalizedString(32352),
                                               alignment=2,
                                               focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.4.png')
 
@@ -188,7 +191,7 @@ class IntroWindow(xbmcgui.WindowDialog):
         if control == self.btn_exit:
             self.close()
         elif control == self.btn_account:
-            xbmc.executebuiltin('Addon.OpenSettings({0})'.format(config['addon']['id']))
+            xbmc.executebuiltin('Addon.OpenSettings({0})'.format(ADDON_ID))
         elif control == self.btn_my_channels:
             self.setProperty('category', '99')
             self.setProperty('sub_category', '0')

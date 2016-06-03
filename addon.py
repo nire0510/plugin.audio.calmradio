@@ -1,26 +1,30 @@
 import sys
-import time
 import routing
-import urllib
+from urllib import quote, urlretrieve
+from time import time
 from config import config
 from api import API
 from user import User
-from xbmc import executebuiltin, Player, getLocalizedString, log, sleep
+from xbmc import executebuiltin, Player, sleep, translatePath
 from xbmcgui import ListItem, Dialog
 from xbmcplugin import addDirectoryItem, endOfDirectory, setContent
 from xbmcaddon import Addon
 from intro import IntroWindow
 from artwork import ArtworkWindow
+import os
 
 
-addon_handle = int(sys.argv[1])
-plugin = routing.Plugin()
-addon = Addon(config['addon']['id'])
-api = API(addon)
+ADDON = Addon()
+ADDON_HANDLE = int(sys.argv[1])
+ADDON_ID = ADDON.getAddonInfo('id')
+ADDON_NAME = ADDON.getAddonInfo('name')
+ADDON_DATA_FOLDER = translatePath(ADDON.getAddonInfo('profile')).decode('utf-8')
+PLUGIN = routing.Plugin()
+api = API()
 artwork = ArtworkWindow()
 
 
-@plugin.route('/')
+@PLUGIN.route('/')
 def index():
     """
     Main add-on popup
@@ -42,7 +46,7 @@ def index():
             show_favorites()    # favorites
 
 
-@plugin.route('/category/<category_id>')
+@PLUGIN.route('/category/<category_id>')
 def show_subcategories(category_id):
     """
     Sub-categories page
@@ -59,16 +63,17 @@ def show_subcategories(category_id):
         })
         # directory item:
         addDirectoryItem(
-            plugin.handle,
-            plugin.url_for(show_channels, category_id=category_id, subcategory_id=item['id']),
+            PLUGIN.handle,
+            PLUGIN.url_for(show_channels, category_id=category_id, subcategory_id=item['id']),
             li,
             True
         )
     # end of directory:
-    endOfDirectory(plugin.handle)
+    endOfDirectory(PLUGIN.handle)
+    executebuiltin('Container.SetViewMode(50)')
 
 
-@plugin.route('/category/<category_id>/subcategory/<subcategory_id>')
+@PLUGIN.route('/category/<category_id>/subcategory/<subcategory_id>')
 def show_channels(category_id, subcategory_id):
     """
     Channels page (playable)
@@ -79,7 +84,7 @@ def show_channels(category_id, subcategory_id):
     for item in api.get_channels(int(subcategory_id)):
         # list item:
         li = ListItem(u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(),
-                                               getLocalizedString(322023) if 'free' not in item['streams'] else '',
+                                               ADDON.getLocalizedString(322023) if 'free' not in item['streams'] else '',
                                                item['description']),
             iconImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']),
             thumbnailImage='{0}/{1}'.format(config['urls']['calm_arts_host'], item['image']))
@@ -87,35 +92,35 @@ def show_channels(category_id, subcategory_id):
             'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], item['image'])
         })
         li.addContextMenuItems(
-            [(getLocalizedString(32300), 'RunPlugin(plugin://{0}/favorites/add/{1})'
-              .format(config['addon']['id'], item['id']))]
+            [(ADDON.getLocalizedString(32300), 'RunPlugin(plugin://{0}/favorites/add/{1})'
+              .format(ADDON_ID, item['id']))]
         )
         li.setInfo('music', {
-            'Title': item['title'].replace('CALM RADIO -', '').title(),
-            'Artist_Description': item['description']
+            'Title': item['title'].replace('CALM RADIO -', '').title()
         })
         # directory item:
         addDirectoryItem(
-            plugin.handle,
-            plugin.url_for(play_channel,
+            PLUGIN.handle,
+            PLUGIN.url_for(play_channel,
                            category_id=category_id,
                            subcategory_id=subcategory_id,
                            channel_id=item['id']),
             li
         )
     # set the content of the directory
-    setContent(addon_handle, 'songs')
+    setContent(ADDON_HANDLE, 'songs')
     # end of directory:
-    endOfDirectory(plugin.handle)
+    endOfDirectory(PLUGIN.handle)
+    executebuiltin('Container.SetViewMode(50)')
 
 
-@plugin.route('/favorites')
+@PLUGIN.route('/favorites')
 def show_favorites():
     """
     User's favorite channels list
     :return:
     """
-    user = User(addon)
+    user = User()
     is_authenticated = user.authenticate()
 
     if is_authenticated:
@@ -132,33 +137,34 @@ def show_favorites():
                     'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], item['image'])
                 })
                 li.addContextMenuItems(
-                    [(getLocalizedString(32301), 'RunPlugin(plugin://{0}/favorites/remove/{1})'
-                      .format(config['addon']['id'], item['id']))]
+                    [(ADDON.getLocalizedString(32301), 'RunPlugin(plugin://{0}/favorites/remove/{1})'
+                      .format(ADDON_ID, item['id']))]
                 )
                 # directory item:
                 addDirectoryItem(
-                    plugin.handle,
-                    plugin.url_for(play_channel,
+                    PLUGIN.handle,
+                    PLUGIN.url_for(play_channel,
                                    category_id=None,
                                    subcategory_id=item['sub_category'],
                                    channel_id=item['id']),
                     li
                 )
             # set the content of the directory
-            setContent(addon_handle, 'songs')
+            setContent(ADDON_HANDLE, 'songs')
             # end of directory:
-            endOfDirectory(plugin.handle)
+            endOfDirectory(PLUGIN.handle)
+            executebuiltin('Container.SetViewMode(50)')
         # favorites list is empty:
         else:
             executebuiltin('Notification("{0}", "{1}")'
-                           .format(getLocalizedString(30000), getLocalizedString(32306)))
+                           .format(ADDON.getLocalizedString(30000), ADDON.getLocalizedString(32306)))
     # user is not authenticated:
     else:
         executebuiltin('Notification("{0}", "{1}")'
-                           .format(getLocalizedString(30000), getLocalizedString(32110)))
+                           .format(ADDON.getLocalizedString(30000), ADDON.getLocalizedString(32110)))
 
 
-@plugin.route('/category/<category_id>/subcategory/<subcategory_id>/channel/<channel_id>')
+@PLUGIN.route('/category/<category_id>/subcategory/<subcategory_id>/channel/<channel_id>')
 def play_channel(category_id, subcategory_id, channel_id):
     """
     Plays selected song
@@ -168,8 +174,9 @@ def play_channel(category_id, subcategory_id, channel_id):
     :return:
     """
     global artwork
+    last_album_cover = ''
 
-    user = User(addon)
+    user = User()
     is_authenticated = user.authenticate()
     channel = [item for item in api.get_channels(int(subcategory_id))
                if item['id'] == int(channel_id)][0]
@@ -177,11 +184,15 @@ def play_channel(category_id, subcategory_id, channel_id):
                       user.username,
                       user.token,
                       user.is_authenticated())
-    recent_tracks_url = channel['recent_tracks']['vip'] if is_authenticated else channel['recent_tracks']['free']
+
+    if is_authenticated:
+        recent_tracks_url = channel['recent_tracks']['vip']
+    elif 'free' in channel['recent_tracks']:
+        recent_tracks_url = channel['recent_tracks']['free']
 
     # is there a valid URL for channel?
     if url:
-        url = urllib.quote(url, safe=':/?=@')
+        url = quote(url, safe=':/?=@')
         li = ListItem(channel['title'], channel['description'], channel['image'])
         li.setArt({'thumb': '{0}/{1}'.format(config['urls']['calm_arts_host'], channel['image']),
                    'fanart': '{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']) })
@@ -189,97 +200,100 @@ def play_channel(category_id, subcategory_id, channel_id):
         li.setProperty('mimetype', 'audio/mpeg')
         li.setProperty('IsPlayable', 'true')
         li.setInfo('music', {
-            'Title': channel['title'].replace('CALM RADIO -', '').title(),
-            'Artist_Description': channel['description'],
+            'Title': channel['title'].replace('CALM RADIO -', '').title()
         })
         Player().play(item=url, listitem=li)
 
-        # executebuiltin('AlarmClock(UpdateNowPlaying, "RunPlugin({0})", 00:10, silent, loop)'
-        #               .format(plugin.url_for(update_artwork,
-        #                                      is_authenticated=is_authenticated,
-        #                                      query=recent_tracks_url)))
+        # update now playing fanrt, channel name & description:
+        artwork.overlay.setImage('{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']))
+        artwork.channel.setLabel(channel['title'])
+        artwork.description.setLabel(channel['description'])
         artwork.show()
+
         while(artwork.getProperty('Closed') != 'True'):
-            recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time.time()))))
-            artwork.cover.setImage('{0}/{1}'.format(config['urls']['calm_arts_host'], recent_tracks['now_playing']['album_art']))
-            artwork.song.setLabel(recent_tracks['now_playing']['title'])
-            artwork.album.setLabel(recent_tracks['now_playing']['album'])
-            artwork.artist.setLabel(recent_tracks['now_playing']['artist'])
+            recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time()))))
+            if (last_album_cover != recent_tracks['now_playing']['album_art']):
+                last_album_cover = recent_tracks['now_playing']['album_art']
+                urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'], recent_tracks['now_playing']['album_art']),
+                                   '{0}{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+                artwork.cover.setImage('{0}/{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+                artwork.song.setLabel(recent_tracks['now_playing']['title'])
+                artwork.album.setLabel(recent_tracks['now_playing']['album'])
+                artwork.artist.setLabel(recent_tracks['now_playing']['artist'])
             sleep(10000)
 
-        log('done!')
         del artwork
-        # executebuiltin('CancelAlarm(UpdateNowPlaying, silent)')
     else:
         # members only access
         dialog = Dialog()
-        ret = dialog.yesno(getLocalizedString(32200), getLocalizedString(32201))
+        ret = dialog.yesno(ADDON.getLocalizedString(32200), ADDON.getLocalizedString(32201))
         if ret == 1:
-            addon.openSettings()
+            ADDON.openSettings()
 
 
-@plugin.route('/favorites/add/<channel_id>')
+@PLUGIN.route('/favorites/add/<channel_id>')
 def add_to_favorites(channel_id):
     """
     Adds a channels to user's favorites list
     :param channel_id: Channel ID
     :return:
     """
-    user = User(addon)
+    user = User()
     is_authenticated = user.authenticate()
     if is_authenticated:
         result = api.add_to_favorites(user.username, user.token, channel_id)
-        executebuiltin('Notification("{0}", "{1}"'.format(getLocalizedString(30000),
-                                                      getLocalizedString(32302) if result
-                                                      else getLocalizedString(32304)))
+        executebuiltin('Notification("{0}", "{1}"'.format(ADDON.getLocalizedString(30000),
+                                                      ADDON.getLocalizedString(32302) if result
+                                                      else ADDON.getLocalizedString(32304)))
     else:
-        executebuiltin('Notification("{0}", "{1}")'.format(getLocalizedString(30000),
-                                                           getLocalizedString(32110)))
+        executebuiltin('Notification("{0}", "{1}")'.format(ADDON.getLocalizedString(30000),
+                                                           ADDON.getLocalizedString(32110)))
 
 
-@plugin.route('/favorites/remove/<channel_id>')
+@PLUGIN.route('/favorites/remove/<channel_id>')
 def remove_from_favorites(channel_id):
     """
     Removes a channels from user's favorites list
     :param channel_id: Channel ID
     :return:
     """
-    user = User(addon)
+    user = User()
     is_authenticated = user.authenticate()
     if is_authenticated:
         result = api.remove_from_favorites(user.username, user.token, channel_id)
         executebuiltin('Container.Refresh')
         executebuiltin('Notification("{0}", "{1}")'.format(
-            getLocalizedString(30000),
-            getLocalizedString(32303) if result else getLocalizedString(32305)
+            ADDON.getLocalizedString(30000),
+            ADDON.getLocalizedString(32303) if result else ADDON.getLocalizedString(32305)
         ))
     else:
         executebuiltin('Notification("{0}", "{1}")'.format(
-            getLocalizedString(30000),
-            getLocalizedString(32110)
+            ADDON.getLocalizedString(30000),
+            ADDON.getLocalizedString(32110)
         ))
 
-@plugin.route('/update_artwork/<is_authenticated>')
-def update_artwork(is_authenticated):
-    """
-    Updates cnow playing modal info
-    :param is_authenticated: Indicates whether user is authenticated or not
-    :return:
-    """
-    global artwork
 
-    recent_tracks = api.get_json(plugin.args['query'][0])
-    log('{0}/{1}'.format(config['urls']['calm_arts_host'], recent_tracks['now_playing']['album_art']))
-    artwork.update_artwork('{0}/{1}'.format(config['urls']['calm_arts_host'], recent_tracks['now_playing']['album_art']),
-                           recent_tracks['now_playing']['album'],
-                           recent_tracks['now_playing']['artist'],
-                           recent_tracks['now_playing']['title'])
-    executebuiltin('Container.Update')
+def empty_directory(folder_path):
+    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+        for file_name in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, file_name)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(e)
+
 
 if __name__ == '__main__':
-    plugin.run()
-    if sys.argv[0] == 'plugin://{0}/'.format(config['addon']['id']) and not addon.getSetting('username'):
+    PLUGIN.run()
+    # empty previous thumbnails or create addon data folder:
+    if os.path.exists(ADDON_DATA_FOLDER):
+        empty_directory(ADDON_DATA_FOLDER)
+    else:
+        os.makedirs(ADDON_DATA_FOLDER)
+
+    if sys.argv[0] == 'PLUGIN://{0}/'.format(ADDON_ID) and not ADDON.getSetting('username'):
         executebuiltin('Notification("{0}", "{1}", 6000, "special://home/addons/{2}/icon.png")'
-                       .format(getLocalizedString(30000),
-                               getLocalizedString(32202),
-                               config['addon']['id']))
+                       .format(ADDON.getLocalizedString(30000),
+                               ADDON.getLocalizedString(32202),
+                               ADDON_ID))

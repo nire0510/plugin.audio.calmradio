@@ -1,7 +1,4 @@
 config = {
-    'addon': {
-       'id': 'plugin.audio.calmradio'
-    },
     'urls': {
         'calm_website': 'https://calmradio.com',
         'calm_categories_api': 'http://api.calmradio.com/categories.json',
