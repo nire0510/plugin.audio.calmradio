@@ -278,12 +278,13 @@ def remove_from_favorites(channel_id):
 def empty_directory(folder_path):
     if os.path.exists(folder_path) and os.path.isdir(folder_path):
         for file_name in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file_name)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(e)
+            if file_name.endswith('.jpg') or file_name.endswith('.png'):
+                file_path = os.path.join(folder_path, file_name)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(e)
 
 
 if __name__ == '__main__':
