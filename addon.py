@@ -244,10 +244,9 @@ def add_to_favorites(channel_id):
     user = User()
     is_authenticated = user.authenticate()
     if is_authenticated:
-        result = api.add_to_favorites(user.username, user.token, channel_id)
+        api.add_to_favorites(user.username, user.token, channel_id)
         executebuiltin('Notification("{0}", "{1}"'.format(ADDON.getLocalizedString(30000),
-                                                          ADDON.getLocalizedString(32302) if result
-                                                          else ADDON.getLocalizedString(32304)))
+                                                          ADDON.getLocalizedString(32302)))
     else:
         executebuiltin('Notification("{0}", "{1}")'.format(ADDON.getLocalizedString(30000),
                                                            ADDON.getLocalizedString(32110)))
