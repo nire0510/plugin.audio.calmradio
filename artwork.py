@@ -1,8 +1,7 @@
 import xbmcgui
 from xbmcaddon import Addon
 
-ACTION_PARENT_DIR = 9
-ACTION_PREVIOUS_MENU = 10
+
 ADDON = Addon()
 
 
@@ -170,7 +169,8 @@ class ArtworkWindow(xbmcgui.WindowDialog):
         self.setFocus(self.btn_close)
 
     def onAction(self, action):
-        if action == ACTION_PREVIOUS_MENU or action == ACTION_PARENT_DIR:
+        if action == xbmcgui.ACTION_BACKSPACE or action == xbmcgui.ACTION_PARENT_DIR or \
+                        action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK:
             self.setProperty('Closed', 'True')
             self.close()
         else:

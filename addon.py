@@ -12,6 +12,7 @@ from xbmcaddon import Addon
 from intro import IntroWindow
 from artwork import ArtworkWindow
 import os
+import xbmc
 
 ADDON = Addon()
 ADDON_HANDLE = int(sys.argv[1])
@@ -71,7 +72,10 @@ def show_subcategories(category_id):
         )
     # end of directory:
     endOfDirectory(PLUGIN.handle)
-    executebuiltin('Container.SetViewMode(50)')
+    executebuiltin('Container.SetViewMode({0})'.format(
+        config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+        if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+    ))
 
 
 @PLUGIN.route('/category/<category_id>/subcategory/<subcategory_id>')
@@ -112,7 +116,10 @@ def show_channels(category_id, subcategory_id):
     setContent(ADDON_HANDLE, 'songs')
     # end of directory:
     endOfDirectory(PLUGIN.handle)
-    executebuiltin('Container.SetViewMode(50)')
+    executebuiltin('Container.SetViewMode({0})'.format(
+        config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+        if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+    ))
 
 
 @PLUGIN.route('/favorites')
@@ -154,7 +161,10 @@ def show_favorites():
             setContent(ADDON_HANDLE, 'songs')
             # end of directory:
             endOfDirectory(PLUGIN.handle)
-            executebuiltin('Container.SetViewMode(50)')
+            executebuiltin('Container.SetViewMode({0})'.format(
+                config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+                if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+            ))
         # favorites list is empty:
         else:
             executebuiltin('Notification("{0}", "{1}")'
@@ -174,9 +184,6 @@ def play_channel(category_id, subcategory_id, channel_id):
     :param channel_id: Selected channel ID
     :return:
     """
-    global artwork
-    last_album_cover = ''
-
     user = User()
     is_authenticated = user.authenticate()
     channel = [item for item in api.get_channels(int(subcategory_id))
@@ -207,27 +214,7 @@ def play_channel(category_id, subcategory_id, channel_id):
         Player().play(item=url, listitem=li)
 
         log('Playing url: {0}'.format(url))
-
-        # update now playing fanrt, channel name & description:
-        artwork.overlay.setImage('{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']))
-        artwork.channel.setLabel(channel['title'])
-        artwork.description.setLabel(channel['description'])
-        artwork.show()
-
-        while (artwork.getProperty('Closed') != 'True'):
-            recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time()))))
-            if (last_album_cover != recent_tracks['now_playing']['album_art']):
-                last_album_cover = recent_tracks['now_playing']['album_art']
-                urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'],
-                                             recent_tracks['now_playing']['album_art']),
-                            '{0}{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
-                artwork.cover.setImage('{0}/{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
-                artwork.song.setLabel(recent_tracks['now_playing']['title'])
-                artwork.album.setLabel(recent_tracks['now_playing']['album'])
-                artwork.artist.setLabel(recent_tracks['now_playing']['artist'])
-            sleep(10000)
-
-        del artwork
+        update_artwork(channel, recent_tracks_url)
     else:
         # members only access
         dialog = Dialog()
@@ -287,6 +274,38 @@ def empty_directory(folder_path):
                         os.unlink(file_path)
                 except Exception as e:
                     print(e)
+
+
+def update_artwork(channel, recent_tracks_url):
+    """
+    Update current channel info
+    :param channel: Channel object
+    :param recent_tracks_url: Recent tracks URL
+    :return:
+    """
+    global artwork
+    last_album_cover = ''
+
+    # update now playing fanart, channel name & description:
+    artwork.overlay.setImage('{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']))
+    artwork.channel.setLabel(channel['title'])
+    artwork.description.setLabel(channel['description'])
+    artwork.show()
+
+    while (artwork.getProperty('Closed') != 'True'):
+        recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time()))))
+        if (last_album_cover != recent_tracks['now_playing']['album_art']):
+            last_album_cover = recent_tracks['now_playing']['album_art']
+            urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'],
+                                         recent_tracks['now_playing']['album_art']),
+                        '{0}{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+            artwork.cover.setImage('{0}/{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+            artwork.song.setLabel(recent_tracks['now_playing']['title'])
+            artwork.album.setLabel(recent_tracks['now_playing']['album'])
+            artwork.artist.setLabel(recent_tracks['now_playing']['artist'])
+        sleep(10000)
+
+    del artwork
 
 
 if __name__ == '__main__':

@@ -204,7 +204,8 @@ class IntroWindow(xbmcgui.WindowDialog):
         self.setFocus(self.controls['buttons'][0])
 
     def onAction(self, action):
-        if action == ACTION_PREVIOUS_MENU or action == ACTION_PARENT_DIR:
+        if action == xbmcgui.ACTION_BACKSPACE or action == xbmcgui.ACTION_PARENT_DIR or \
+                        action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK:
             self.close()
 
     def onControl(self, control):
