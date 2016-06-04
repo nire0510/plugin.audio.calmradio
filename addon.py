@@ -43,6 +43,8 @@ def index():
             show_subcategories(category)
         else:
             show_favorites()  # favorites
+    else:
+        del intro_window
 
 
 @PLUGIN.route('/category/<category_id>')
