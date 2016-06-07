@@ -1,7 +1,6 @@
 import xbmcgui
 from xbmcaddon import Addon
 
-
 ADDON = Addon()
 
 
@@ -11,8 +10,6 @@ ADDON = Addon()
 
 class ArtworkWindow(xbmcgui.WindowDialog):
     def __init__(self):
-        object.__init__(self)
-
         dimensions = {
             'spacing': {
                 'normal': 20,
@@ -105,8 +102,8 @@ class ArtworkWindow(xbmcgui.WindowDialog):
                 dimensions['cover']['x1'] - dimensions['spacing']['normal'],
                 dimensions['cover']['y1'] - dimensions['details']['height'] / 2 - dimensions['spacing']['normal'],
                 dimensions['cover']['x2'] - dimensions['cover']['x1'] + 2 * dimensions['spacing']['normal'],
-                dimensions['cover']['y2'] - dimensions['cover']['y1'] + dimensions['details']['height']
-                + 2 * dimensions['spacing']['normal'],
+                dimensions['cover']['y2'] - dimensions['cover']['y1'] + dimensions['details']['height'] +
+                2 * dimensions['spacing']['normal'],
                 'special://home/addons/plugin.audio.calmradio/resources/media/box-shadow.png'
         )
 
@@ -167,11 +164,13 @@ class ArtworkWindow(xbmcgui.WindowDialog):
                           cover_shadow, self.cover, details, self.song, self.album, self.artist))
         # set focus on close button:
         self.setFocus(self.btn_close)
+        # mark as open:
+        ADDON.setSetting('artwork_open', 'true')
 
     def onAction(self, action):
         if action == xbmcgui.ACTION_BACKSPACE or action == xbmcgui.ACTION_PARENT_DIR or \
                         action == xbmcgui.ACTION_PREVIOUS_MENU or action == xbmcgui.ACTION_NAV_BACK:
-            self.setProperty('Closed', 'True')
+            ADDON.setSetting('artwork_open', 'false')
             self.close()
         else:
             # set focus on close button:

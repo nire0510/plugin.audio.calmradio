@@ -30,22 +30,25 @@ def index():
     Main add-on popup
     :return:
     """
-    intro_window = IntroWindow(api)
-    intro_window.doModal()
-    section_id = intro_window.getProperty('section')
-    if section_id:
-        section_id = int(section_id)
-        category_id = int(intro_window.getProperty('category'))
-        del intro_window
+    if ADDON.getSetting('artwork_open') == 'false':
+        intro_window = IntroWindow(api)
+        intro_window.doModal()
+        section_id = intro_window.getProperty('section')
+        if section_id:
+            section_id = int(section_id)
+            category_id = int(intro_window.getProperty('category'))
+            del intro_window
 
-        if section_id == 1:  # channels
-            show_channels(section_id, category_id) if section_id != 99 else show_favorites()
-        elif section_id == 3:  # atmospheres
-            show_categories(section_id)
+            if section_id == 1:  # channels
+                show_channels(section_id, category_id) if section_id != 99 else show_favorites()
+            elif section_id == 3:  # atmospheres
+                show_categories(section_id)
+            else:
+                show_favorites()  # favorites
         else:
-            show_favorites()  # favorites
+            del intro_window
     else:
-        del intro_window
+        log('{0}: Artwork window already open'.format(ADDON_ID))
 
 
 @PLUGIN.route('/section/<section_id>')
@@ -73,8 +76,8 @@ def show_categories(section_id):
     # end of directory:
     endOfDirectory(PLUGIN.handle)
     executebuiltin('Container.SetViewMode({0})'.format(
-        config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-        if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+            config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+            if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
     ))
 
 
@@ -107,7 +110,6 @@ def show_channels(section_id, category_id):
         addDirectoryItem(
                 PLUGIN.handle,
                 PLUGIN.url_for(play_channel,
-                               section_id=section_id,
                                category_id=category_id,
                                channel_id=item['id']),
                 li
@@ -117,8 +119,8 @@ def show_channels(section_id, category_id):
     # end of directory:
     endOfDirectory(PLUGIN.handle)
     executebuiltin('Container.SetViewMode({0})'.format(
-        config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-        if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+            config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+            if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
     ))
 
 
@@ -152,7 +154,6 @@ def show_favorites():
                 addDirectoryItem(
                         PLUGIN.handle,
                         PLUGIN.url_for(play_channel,
-                                       section_id=None,
                                        category_id=item['category'],
                                        channel_id=item['id']),
                         li
@@ -162,8 +163,8 @@ def show_favorites():
             # end of directory:
             endOfDirectory(PLUGIN.handle)
             executebuiltin('Container.SetViewMode({0})'.format(
-                config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-                if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 500]
+                    config['viewmodes']['thumbnail'][xbmc.getSkinDir()
+                    if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
             ))
         # favorites list is empty:
         else:
@@ -175,11 +176,10 @@ def show_favorites():
                        .format(ADDON.getLocalizedString(30000), ADDON.getLocalizedString(32110)))
 
 
-@PLUGIN.route('/section/<section_id>/category/<category_id>/channel/<channel_id>')
-def play_channel(section_id, category_id, channel_id):
+@PLUGIN.route('/category/<category_id>/channel/<channel_id>')
+def play_channel(category_id, channel_id):
     """
     Plays selected song
-    :param section_id: Selected section ID
     :param category_id: Selected category ID
     :param channel_id: Selected channel ID
     :return:
@@ -293,9 +293,9 @@ def update_artwork(channel, recent_tracks_url):
     artwork.description.setLabel(channel['description'])
     artwork.show()
 
-    while (artwork.getProperty('Closed') != 'True'):
+    while ADDON.getSetting('artwork_open') != 'false':
         recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time()))))
-        if (last_album_cover != recent_tracks['now_playing']['album_art']):
+        if last_album_cover != recent_tracks['now_playing']['album_art']:
             last_album_cover = recent_tracks['now_playing']['album_art']
             urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'],
                                          recent_tracks['now_playing']['album_art']),
@@ -311,7 +311,7 @@ def update_artwork(channel, recent_tracks_url):
 
 if __name__ == '__main__':
     PLUGIN.run()
-    # empty previous thumbnails or create addon data folder:
+    # empty previous thumbnails or create add-on data folder:
     if os.path.exists(ADDON_DATA_FOLDER):
         empty_directory(ADDON_DATA_FOLDER)
     else:
