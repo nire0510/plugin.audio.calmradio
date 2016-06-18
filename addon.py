@@ -5,14 +5,13 @@ from time import time
 from config import config
 from api import API
 from user import User
-from xbmc import executebuiltin, Player, sleep, translatePath, log
-from xbmcgui import ListItem, Dialog
+from xbmc import executebuiltin, Player, sleep, translatePath, log, getSkinDir, getCondVisibility
+from xbmcgui import ListItem, Dialog, getCurrentWindowDialogId, WindowDialog
 from xbmcplugin import addDirectoryItem, endOfDirectory, setContent
 from xbmcaddon import Addon
 from intro import IntroWindow
 from artwork import ArtworkWindow
 import os
-import xbmc
 
 ADDON = Addon()
 ADDON_HANDLE = int(sys.argv[1])
@@ -20,9 +19,6 @@ ADDON_ID = ADDON.getAddonInfo('id')
 ADDON_NAME = ADDON.getAddonInfo('name')
 ADDON_DATA_FOLDER = translatePath(ADDON.getAddonInfo('profile')).decode('utf-8')
 PLUGIN = routing.Plugin()
-api = API()
-artwork = ArtworkWindow()
-
 
 @PLUGIN.route('/')
 def index():
@@ -30,7 +26,15 @@ def index():
     Main add-on popup
     :return:
     """
-    if ADDON.getSetting('artwork_open') == 'false':
+    api = API()
+
+    # check if current window is arwork or intro:
+    window_id = getCurrentWindowDialogId()
+    window = WindowDialog(window_id)
+
+    if isinstance(window, IntroWindow) or isinstance(window, ArtworkWindow):
+        log('Either IntroWindow or ArtworkWindow are already open')
+    else:
         intro_window = IntroWindow(api)
         intro_window.doModal()
         section_id = intro_window.getProperty('section')
@@ -47,8 +51,6 @@ def index():
                 show_favorites()  # favorites
         else:
             del intro_window
-    else:
-        log('{0}: Artwork window already open'.format(ADDON_ID))
 
 
 @PLUGIN.route('/section/<section_id>')
@@ -58,6 +60,8 @@ def show_categories(section_id):
     :param section_id: Selected section ID
     :return:
     """
+    api = API()
+
     for item in api.get_categories(int(section_id)):
         # list item:
         li = ListItem(item['name'].capitalize(),
@@ -76,8 +80,8 @@ def show_categories(section_id):
     # end of directory:
     endOfDirectory(PLUGIN.handle)
     executebuiltin('Container.SetViewMode({0})'.format(
-            config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-            if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
+            config['viewmodes']['thumbnail'][getSkinDir()
+            if getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
     ))
 
 
@@ -89,6 +93,8 @@ def show_channels(section_id, category_id):
     :param category_id: Selected category ID
     :return:
     """
+    api = API()
+
     for item in api.get_channels(int(category_id)):
         # list item:
         li = ListItem(u'{0} {1}'.format(item['title'].replace('CALM RADIO -', '').title(),
@@ -119,8 +125,8 @@ def show_channels(section_id, category_id):
     # end of directory:
     endOfDirectory(PLUGIN.handle)
     executebuiltin('Container.SetViewMode({0})'.format(
-            config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-            if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
+            config['viewmodes']['thumbnail'][getSkinDir()
+            if getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
     ))
 
 
@@ -130,6 +136,7 @@ def show_favorites():
     User's favorite channels list
     :return:
     """
+    api = API()
     user = User()
     is_authenticated = user.authenticate()
 
@@ -163,8 +170,8 @@ def show_favorites():
             # end of directory:
             endOfDirectory(PLUGIN.handle)
             executebuiltin('Container.SetViewMode({0})'.format(
-                    config['viewmodes']['thumbnail'][xbmc.getSkinDir()
-                    if xbmc.getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
+                    config['viewmodes']['thumbnail'][getSkinDir()
+                    if getSkinDir() in config['viewmodes']['thumbnail'] else 'skin.confluence']
             ))
         # favorites list is empty:
         else:
@@ -184,6 +191,7 @@ def play_channel(category_id, channel_id):
     :param channel_id: Selected channel ID
     :return:
     """
+    api = API()
     user = User()
     is_authenticated = user.authenticate()
     recent_tracks_url = ''
@@ -231,6 +239,7 @@ def add_to_favorites(channel_id):
     :param channel_id: Channel ID
     :return:
     """
+    api = API()
     user = User()
     is_authenticated = user.authenticate()
     if is_authenticated:
@@ -249,6 +258,7 @@ def remove_from_favorites(channel_id):
     :param channel_id: Channel ID
     :return:
     """
+    api = API()
     user = User()
     is_authenticated = user.authenticate()
     if is_authenticated:
@@ -284,28 +294,44 @@ def update_artwork(channel, recent_tracks_url):
     :param recent_tracks_url: Recent tracks URL
     :return:
     """
-    global artwork
+    artwork = ArtworkWindow()
+    api = API()
     last_album_cover = ''
 
     # update now playing fanart, channel name & description:
     artwork.overlay.setImage('{0}{1}'.format(config['urls']['calm_blurred_arts_host'], channel['image']))
-    artwork.channel.setLabel(channel['title'])
-    artwork.description.setLabel(channel['description'])
+    artwork.channel.setLabel('[B]' + channel['title'] + '[/B]')
+    artwork.description.setText(channel['description'])
     artwork.show()
+    artwork_id = getCurrentWindowDialogId()
 
-    while ADDON.getSetting('artwork_open') != 'false':
+    while getCondVisibility('Window.IsVisible({0})'.format(artwork_id)):
         recent_tracks = api.get_json('{0}?{1}'.format(recent_tracks_url, str(int(time()))))
         if last_album_cover != recent_tracks['now_playing']['album_art']:
             last_album_cover = recent_tracks['now_playing']['album_art']
-            urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'],
-                                         recent_tracks['now_playing']['album_art']),
-                        '{0}{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
-            artwork.cover.setImage('{0}/{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
-            artwork.song.setLabel(recent_tracks['now_playing']['title'])
-            artwork.album.setLabel(recent_tracks['now_playing']['album'])
-            artwork.artist.setLabel(recent_tracks['now_playing']['artist'])
+            # urlretrieve('{0}/{1}'.format(config['urls']['calm_arts_host'],
+            #                              recent_tracks['now_playing']['album_art']),
+            #             '{0}{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+            # artwork.cover.setImage('{0}/{1}'.format(ADDON_DATA_FOLDER, recent_tracks['now_playing']['album_art']))
+            artwork.cover.setImage('{0}/{1}'.format(config['urls']['calm_arts_host'],
+                                         recent_tracks['now_playing']['album_art']))
+            artwork.song.setLabel('[B]' + recent_tracks['now_playing']['title'] + '[/B]')
+            artwork.album.setLabel('[B]Album[/B]: ' + (recent_tracks['now_playing']['album']
+                                                       if recent_tracks['now_playing']['album'] else 'N/A'))
+            artwork.artist.setLabel('[B]Artist[/B]: ' + recent_tracks['now_playing']['artist'])
+            # recent tracks:
+            # artwork.recent_1.setLabel('[B]{0}[/B] by {1}'.format(
+            #     recent_tracks['recently_played'][0]['title'], recent_tracks['recently_played'][0]['artist']
+            # ))
+            # artwork.recent_2.setLabel('[B]{0}[/B] by {1}'.format(
+            #     recent_tracks['recently_played'][1]['title'], recent_tracks['recently_played'][1]['artist']
+            # ))
+            # artwork.recent_3.setLabel(' - [B]{0}[/B] by {1}'.format(
+            #     recent_tracks['recently_played'][2]['title'], recent_tracks['recently_played'][2]['artist']
+            # ))
         sleep(10000)
 
+    log('Artwork closed')
     del artwork
 
 
