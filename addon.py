@@ -329,7 +329,7 @@ def update_artwork(channel, recent_tracks_url):
             # artwork.recent_3.setLabel(' - [B]{0}[/B] by {1}'.format(
             #     recent_tracks['recently_played'][2]['title'], recent_tracks['recently_played'][2]['artist']
             # ))
-        sleep(10000)
+        sleep(5000)
 
     log('Artwork closed')
     del artwork
