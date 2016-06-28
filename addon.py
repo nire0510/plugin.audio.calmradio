@@ -1,6 +1,6 @@
 import sys
 import routing
-from urllib import quote, urlretrieve
+from urllib import quote
 from time import time
 from config import config
 from api import API

@@ -1,5 +1,5 @@
 import xbmcgui
-from xbmc import executebuiltin, Player
+from xbmc import executebuiltin
 from xbmcaddon import Addon
 
 ADDON = Addon()
