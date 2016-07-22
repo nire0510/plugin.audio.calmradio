@@ -1,5 +1,5 @@
 import xbmcgui
-from xbmc import executebuiltin
+from xbmc import executebuiltin, log
 from xbmcaddon import Addon
 
 ADDON = Addon()
@@ -19,14 +19,14 @@ class ArtworkWindow(xbmcgui.WindowDialog):
 
         # top bar
         topbar = xbmcgui.ControlImage(0, 0, 1920, 100,
-                                      'special://home/addons/plugin.audio.calmradio/resources/media/FFFFFF-0.4.png'
+                                      'http://imagen.nirelbaz.com/?size=1x1&hexa=18b0e244'
                                       )
 
-        # calm radio
-        calmradio = xbmcgui.ControlImage(20, 10, 340, 80,
-                                         'special://home/addons/plugin.audio.calmradio/resources/media/calmradio-b.png')
+        # calm radio - label
+        calmradio = xbmcgui.ControlImage(30, 10, 340, 80,
+                                         'special://home/addons/plugin.audio.calmradio/resources/media/calmradio-w.png')
         # channel name
-        self.channel = xbmcgui.ControlLabel(810, 160, 1060, 30, 'Channel Name')
+        self.channel = xbmcgui.ControlLabel(810, 160, 1060, 30, 'Channel Name', textColor='0xff18b0e2')
 
         # channel description
         self.description = xbmcgui.ControlTextBox(810, 200, 1060, 800, 'Channel Description')
@@ -37,25 +37,26 @@ class ArtworkWindow(xbmcgui.WindowDialog):
         # self.recent_2 = xbmcgui.ControlLabel(840, 890, 950, 30, 'Song 2')
         # self.recent_3 = xbmcgui.ControlLabel(840, 920, 950, 30, 'Song 3')
 
-        self.btn_volume = xbmcgui.ControlButton(1680, 20, 60, 60, '',
+        self.btn_volume = xbmcgui.ControlButton(1760, 20, 60, 60, '',
                                                 focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/volume.png',
                                                 noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/volume.png'
                                                 )
 
-        self.btn_mute = xbmcgui.ControlButton(1680, 20, 60, 60, '',
+        self.btn_mute = xbmcgui.ControlButton(1760, 20, 60, 60, '',
                                               focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/mute.png',
                                               noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/mute.png'
                                               )
 
-        self.btn_timer = xbmcgui.ControlButton(1760, 20, 60, 60, '',
-                                               focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/timer.png',
-                                               noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/timer.png'
-                                               )
 
-        self.btn_cancel_timer = xbmcgui.ControlButton(1760, 20, 60, 60, '',
-                                                      focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/cancel-timer.png',
-                                                      noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/cancel-timer.png'
-                                                      )
+        # self.btn_timer = xbmcgui.ControlButton(1760, 20, 60, 60, '',
+        #                                        focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/timer.png',
+        #                                        noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/timer.png'
+        #                                        )
+
+        # self.btn_cancel_timer = xbmcgui.ControlButton(1760, 20, 60, 60, '',
+        #                                               focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/cancel-timer.png',
+        #                                               noFocusTexture='special://home/addons/plugin.audio.calmradio/resources/media/cancel-timer.png'
+        #                                               )
 
         self.btn_close = xbmcgui.ControlButton(1830, 20, 60, 60, '',
                                                focusTexture='special://home/addons/plugin.audio.calmradio/resources/media/close.png',
@@ -77,7 +78,7 @@ class ArtworkWindow(xbmcgui.WindowDialog):
                                           )
 
         # song name
-        self.song = xbmcgui.ControlLabel(70, 890, 660, 30, 'Song Name')
+        self.song = xbmcgui.ControlLabel(70, 890, 660, 30, 'Song Name', textColor='0xff18b0e2')
 
         # album title
         self.album = xbmcgui.ControlLabel(70, 940, 660, 30, 'Album Title', font='font12')
@@ -87,22 +88,31 @@ class ArtworkWindow(xbmcgui.WindowDialog):
         # add all controls:
         self.addControls((self.overlay, topbar, calmradio, self.channel, self.description,
                           # recent, self.recent_1, self.recent_2, self.recent_3,
-                          self.btn_mute, self.btn_volume, self.btn_timer, self.btn_cancel_timer, self.btn_close,
+                          self.btn_mute, self.btn_volume, self.btn_close,
                           cover_shadow, spinner, self.cover, self.song, self.album, self.artist))
+
+        # set navigation:
+        self.btn_mute.setNavigation(self.btn_mute, self.btn_mute, self.btn_close, self.btn_close)
+        self.btn_volume.setNavigation(self.btn_volume, self.btn_volume, self.btn_close, self.btn_close)
+        self.btn_close.setNavigation(self.btn_close, self.btn_close, self.btn_mute, self.btn_mute)
 
         # set animations:
         self.channel.setAnimations([('WindowOpen', 'effect=zoom end=110')])
+        self.artist.setAnimations([('WindowOpen', 'effect=zoom end=90')])
+        self.album.setAnimations([('WindowOpen', 'effect=zoom end=90')])
         self.btn_volume.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
         self.btn_mute.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
-        self.btn_timer.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
-        self.btn_cancel_timer.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
+        # self.btn_timer.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
+        # self.btn_cancel_timer.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
         self.btn_close.setAnimations([('Unfocus', 'effect=fade start=100 end=40 time=300')])
 
         # set visibility conditions:
         self.btn_volume.setVisibleCondition('[!Player.Muted]', False)
         self.btn_mute.setVisibleCondition('[Player.Muted]', False)
-        self.btn_cancel_timer.setVisibleCondition('[!Control.IsVisible({0})]'
-                                                  .format(self.btn_timer.getId()), False)
+        # self.btn_cancel_timer.setVisibleCondition('[!Control.IsVisible({0})]'
+        #                                           .format(self.btn_timer.getId()), False)
+
+        self.setFocus(self.btn_mute)
 
     def onAction(self, action):
         if action == xbmcgui.ACTION_BACKSPACE or action == xbmcgui.ACTION_PARENT_DIR or \
@@ -113,13 +123,13 @@ class ArtworkWindow(xbmcgui.WindowDialog):
         if control == self.btn_mute or control == self.btn_volume:
             executebuiltin('Mute')
 
-        elif control == self.btn_timer:
-            executebuiltin('AlarmClock(CalmSleepTimer, PlayerControl(Stop))')
-            self.btn_timer.setVisible(False)
+        # elif control == self.btn_timer:
+        #     executebuiltin('AlarmClock(CalmSleepTimer, PlayerControl(Stop))')
+        #     self.btn_timer.setVisible(False)
 
-        elif control == self.btn_cancel_timer:
-            executebuiltin('CancelAlarm(CalmSleepTimer)')
-            self.btn_timer.setVisible(True)
+        # elif control == self.btn_cancel_timer:
+        #     executebuiltin('CancelAlarm(CalmSleepTimer)')
+        #     self.btn_timer.setVisible(True)
 
         elif control == self.btn_close:
             executebuiltin('PlayerControl(Stop)')

@@ -119,15 +119,25 @@ class API(object):
         :param is_authenticated: Indicates whether user is authenticated
         :return:
         """
-        bitrate = {
-            '0': '32',
-            '1': '64',
-            '2': '192',
-            '3': '320'
-        }[ADDON.getSetting('bitrate') or 0]
+        # datafix:
+        if ADDON.getSetting('bitrate') == '3':
+            ADDON.setSetting('bitrate', '2')
 
-        if not is_authenticated and 'free' in streams:
-            return streams['free']
+        if not is_authenticated:
+            bitrate = {
+                '0': 'free',
+                '1': 'free_56',
+                '3': 'free_128'
+            }[ADDON.getSetting('bitrate') or '0']
+        else:
+            bitrate = {
+                '0': '64',
+                '1': '192',
+                '2': '320'
+            }[ADDON.getSetting('bitrate') or '0']
+
+        if not is_authenticated and bitrate in streams:
+            return streams[bitrate]
         elif is_authenticated:
             return streams[bitrate].replace('http://', 'http://{0}:{1}@'.format(
                 username,

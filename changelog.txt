@@ -1,16 +1,11 @@
-v-future
-- rename categories and sub categories to sections and categories DONE
-- close windows on "BACK" DONE
+v0.2.2
+- rename categories and sub categories to sections and categories
+- close windows on "BACK"
 - add player controls to artwork window
-    - play/pause
     - volume
-    - add/remove from my channels
-    - timer
     - close
-    - show intro window
-- fix bug which opens multiple intro windows upon system notifications (eminence) DONE
+- fix bug which opens multiple intro windows upon system notifications (eminence)
 - animations
-- facebook feed
 
 v0.2.0
 - New design
