@@ -1,5 +1,15 @@
+v0.2.6
+- Fix favorites API endpoint
+- Add previous and next songs
+
+v0.2.5
+- fix missing bg image bug
+
+-v0.2.4
+- add verify flag to requests
+
 v0.2.3
-- set default bit rate to 128kb for non registered users
+- set default bit rate to 128kb
 
 v0.2.2
 - rename categories and sub categories to sections and categories
